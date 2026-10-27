@@ -112,14 +112,21 @@
   }
 
   // ---- sound ----
-  // The GameBull mute = their own music + effects mute (their settings and key, mergeRushAudioSettingsV1). Muting
-  // also mutes their voice; un-muting leaves their voice as their setting has it (their default: muted, 作業中).
+  // The GameBull mute = their own music + effects + voice mute (their settings and key, mergeRushAudioSettingsV1).
+  // Their delivery starts their female voice (Let's go! / Nice! / Amazing! / Awesome! / New best! / Game over!) muted
+  // (作業中のため初期状態はミュート), and the only way to turn it on is their settings panel, which the GameBull build never
+  // shows. The client asked for the voice in the GameBull build (2026-10-27): so here their voice follows the GameBull
+  // sound switch, ON whenever the game's sound is ON, from the first visit. Their files and their own site are unchanged.
   function muted() { return !!(sound.settings.bgmMuted && sound.settings.sfxMuted); }
+  function syncBoxes() { ["bgm", "sfx", "voice"].forEach(function (b) { var m = $(b + "Mute"); if (m) m.checked = !!sound.settings[b + "Muted"]; }); }
   function setMuted(v) {
     v = !!v;
-    sound.setSetting("bgmMuted", v); sound.setSetting("sfxMuted", v);
-    if (v) sound.setSetting("voiceMuted", true);
-    ["bgm", "sfx", "voice"].forEach(function (b) { var m = $(b + "Mute"); if (m) m.checked = !!sound.settings[b + "Muted"]; });
+    sound.setSetting("bgmMuted", v); sound.setSetting("sfxMuted", v); sound.setSetting("voiceMuted", v);
+    syncBoxes();
+  }
+  if (!muted() && sound.settings.voiceMuted) {
+    sound.settings.voiceMuted = false; sound.applySettings(); syncBoxes();
+    console.log("[MR-GB] Their voice ON with the game's sound (their default is muted; the client asked for it in the GameBull build).");
   }
   // iPhone / Safari: Web Audio starts only inside a tap, and Safari does not count an earlier tap once a server call
   // has run. Their own unlock runs on their board taps; here it also runs on every tap in the GameBull screens (the
